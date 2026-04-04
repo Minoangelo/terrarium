@@ -136,13 +136,17 @@ python -m compileall .
 # lint (primary)
 pylint main.py entities.py events.py persistence.py renderer.py world.py
 
+# lint tests (with project root on PYTHONPATH)
+PYTHONPATH=. pylint tests/test_main_state_persistence.py
+
 # optional fast lint
 ruff check .
 ```
 
 ### 3) Tests
 
-There is no committed test suite yet. If you add tests, use `pytest`.
+The repository includes tests under `tests/`. Use `pytest` to run them, and keep
+adding coverage there as features and bug fixes evolve.
 
 ```bash
 # run all tests

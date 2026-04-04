@@ -55,8 +55,8 @@ ruff check .
 
 ### Tests
 
-No tests are currently present under `tests/` or `test_*.py`.
-If you add tests, prefer `pytest` and use commands below.
+Tests are present under `tests/`.
+Use `pytest` and keep extending coverage as features and fixes are added.
 
 ```bash
 # if needed
