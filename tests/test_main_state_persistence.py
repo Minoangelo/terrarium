@@ -13,13 +13,13 @@ from world import World
 def _make_state(
     elapsed: int,
     plant_positions: list[tuple[int, int]],
-) -> tuple[World, list[Entity], int, EventLog, MilestoneTracker]:
+) -> main.GameState:
     """Build a minimal, deterministic game-state tuple for tests."""
 
     world = World(width=20, height=10)
     entities: list[Entity] = [Plant(x, y) for x, y in plant_positions]
 
-    return world, entities, elapsed, EventLog(), MilestoneTracker()
+    return main.GameState(world, entities, elapsed, EventLog(), MilestoneTracker())
 
 
 def test_main_saves_state_returned_by_run_game(monkeypatch, tmp_path) -> None:
@@ -59,7 +59,11 @@ def test_main_saves_state_returned_by_run_game(monkeypatch, tmp_path) -> None:
     saved_args = saved["args"]
 
     assert saved_args[0] == tmp_path / "save.json"
-    assert saved_args[1:] == returned_state
+    assert saved_args[1] is returned_state.world
+    assert saved_args[2] is returned_state.entities
+    assert saved_args[3] == returned_state.elapsed
+    assert saved_args[4] is returned_state.event_log
+    assert saved_args[5] is returned_state.milestones
 
 
 class _FakeKeyReader:
@@ -93,12 +97,10 @@ class _FakeLive:
 
         return self
 
-
     def __exit__(self, *_args) -> bool:
         """Exit context without suppressing exceptions."""
 
         return False
-
 
     def update(self, *_args, **_kwargs) -> None:
         """Accept updates and do nothing."""
@@ -107,11 +109,13 @@ class _FakeLive:
 def test_run_game_returns_latest_state_on_keyboard_interrupt(monkeypatch) -> None:
     """run_game() should return the current state when interrupted."""
 
-    world = World(width=20, height=10)
-    entities: list[Entity] = [Plant(1, 1)]
-    elapsed = 0
-    event_log = EventLog()
-    milestones = MilestoneTracker()
+    state = main.GameState(
+        world=World(width=20, height=10),
+        entities=[Plant(1, 1)],
+        elapsed=0,
+        event_log=EventLog(),
+        milestones=MilestoneTracker(),
+    )
 
     monkeypatch.setattr(main, "KeyReader", _FakeKeyReader)
     monkeypatch.setattr(main, "Renderer", _FakeRenderer)
@@ -130,12 +134,6 @@ def test_run_game_returns_latest_state_on_keyboard_interrupt(monkeypatch) -> Non
 
     monkeypatch.setattr(main.time, "sleep", _raise_interrupt)
 
-    _, _, new_elapsed, _, _ = main.run_game(
-        world,
-        entities,
-        elapsed,
-        event_log,
-        milestones,
-    )
+    returned_state = main.run_game(state)
 
-    assert new_elapsed == 1
+    assert returned_state.elapsed == 1
