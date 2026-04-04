@@ -4,10 +4,10 @@ from __future__ import annotations
 
 import os
 
-import main
 from entities import Entity, Plant
 from events import EventLog, MilestoneTracker
 from world import World
+import main
 
 
 def _make_state(
@@ -137,3 +137,36 @@ def test_run_game_returns_latest_state_on_keyboard_interrupt(monkeypatch) -> Non
     returned_state = main.run_game(state)
 
     assert returned_state.elapsed == 1
+
+
+def test_run_game_catches_up_multiple_ticks_when_frame_lags(monkeypatch) -> None:
+    """run_game() should process multiple ticks when accumulated time exceeds 1s."""
+
+    state = main.GameState(
+        world=World(width=20, height=10),
+        entities=[Plant(1, 1)],
+        elapsed=0,
+        event_log=EventLog(),
+        milestones=MilestoneTracker(),
+    )
+
+    monkeypatch.setattr(main, "KeyReader", _FakeKeyReader)
+    monkeypatch.setattr(main, "Renderer", _FakeRenderer)
+    monkeypatch.setattr(main, "Live", _FakeLive)
+    monkeypatch.setattr(main, "process_tick", lambda _w, e, _log: e)
+
+    monotonic_values = iter([0.0, 3.3])
+
+    def _fake_monotonic() -> float:
+        return next(monotonic_values, 3.3)
+
+    monkeypatch.setattr(main.time, "monotonic", _fake_monotonic)
+
+    def _raise_interrupt(_seconds: float) -> None:
+        raise KeyboardInterrupt
+
+    monkeypatch.setattr(main.time, "sleep", _raise_interrupt)
+
+    returned_state = main.run_game(state)
+
+    assert returned_state.elapsed == 3
