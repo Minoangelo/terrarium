@@ -308,6 +308,7 @@ def run_game(state: GameState) -> GameState:  # pylint: disable=too-many-locals
 
         with Live(initial_render, screen=True, refresh_per_second=4) as live:
             last_tick = time.monotonic()
+            tick_accumulator = 0.0
 
             while True:
                 # process keystrokes accumulated since last frame
@@ -319,11 +320,12 @@ def run_game(state: GameState) -> GameState:  # pylint: disable=too-many-locals
                     if action == "rain":
                         rain_ticks = 20
 
-                # one-second simulation tick
+                # one-second simulation ticks (accumulator-based)
                 now = time.monotonic()
+                tick_accumulator += now - last_tick
+                last_tick = now
 
-                if now - last_tick >= 1.0:
-                    last_tick = now
+                while tick_accumulator >= 1.0:
                     state.elapsed += 1
                     state.event_log.current_tick = state.elapsed
 
@@ -364,6 +366,8 @@ def run_game(state: GameState) -> GameState:  # pylint: disable=too-many-locals
                             state.milestones,
                         )
                         last_save_elapsed = state.elapsed
+
+                    tick_accumulator -= 1.0
 
                 live.update(
                     renderer.render(
