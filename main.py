@@ -275,7 +275,7 @@ def run_game(  # pylint: disable=too-many-locals
     elapsed: int,
     event_log: EventLog,
     milestones: MilestoneTracker,
-) -> None:
+) -> tuple[World, list[Entity], int, EventLog, MilestoneTracker]:
     """Run the main game loop until the player quits."""
 
     key_reader = KeyReader()
@@ -300,7 +300,7 @@ def run_game(  # pylint: disable=too-many-locals
                     action = _handle_key(key, world, entities, event_log)
 
                     if action == "quit":
-                        return
+                        return world, entities, elapsed, event_log, milestones
                     if action == "rain":
                         rain_ticks = 20
 
@@ -358,6 +358,8 @@ def run_game(  # pylint: disable=too-many-locals
                 )
 
                 time.sleep(0.05)
+    except KeyboardInterrupt:
+        return world, entities, elapsed, event_log, milestones
     finally:
         key_reader.stop()
 
@@ -411,9 +413,9 @@ def main() -> None:
                 time.sleep(1.0)
 
     try:
-        run_game(world, entities, elapsed, event_log, milestones)
-    except KeyboardInterrupt:
-        pass
+        world, entities, elapsed, event_log, milestones = run_game(
+            world, entities, elapsed, event_log, milestones
+        )
     finally:
         save_game(SAVE_PATH, world, entities, elapsed, event_log, milestones)
         console.print("\n[green]Terrarium saved. Goodbye![/green]")

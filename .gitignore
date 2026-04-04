@@ -10,8 +10,10 @@
 *~
 .AppleDouble
 .coverage
+.coverage.*
 .DS_Store
 .eggs/
+.hypothesis/
 .idea/
 .LSOverride
 .mypy_cache/
@@ -22,7 +24,6 @@
 .vscode/
 __pycache__/
 build/
-dist/
 dist/
 env/
 ENV/
