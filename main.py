@@ -120,31 +120,29 @@ class KeyReader:
 # === World initialisation helpers ===
 
 def _place_random(
-    world: World,
-    entities: list[Entity],
+    state: GameState,
     cls: type,
-    event_log: EventLog,
     message: str = "",
     color: str = "white",
 ) -> bool:
     """Place one entity of *cls* at a random free land tile. Returns False if full."""
 
-    occupied = {(e.x, e.y) for e in entities}
+    occupied = {(e.x, e.y) for e in state.entities}
     candidates = [
         (x, y)
-        for y in range(world.height)
-        for x in range(world.width)
-        if not world.get(x, y).is_water and (x, y) not in occupied
+        for y in range(state.world.height)
+        for x in range(state.world.width)
+        if not state.world.get(x, y).is_water and (x, y) not in occupied
     ]
 
     if not candidates:
         return False
 
     x, y = random.choice(candidates)
-    entities.append(cls(x, y))
+    state.entities.append(cls(x, y))
 
     if message:
-        event_log.log(message, color)
+        state.event_log.log(message, color)
 
     return True
 
@@ -178,20 +176,24 @@ def _new_game() -> GameState:
 
     world = World()
     entities: list[Entity] = []
-    elapsed = 0
-    event_log = EventLog()
-    milestones = MilestoneTracker()
+    state = GameState(
+        world=world,
+        entities=entities,
+        elapsed=0,
+        event_log=EventLog(),
+        milestones=MilestoneTracker(),
+    )
 
     _seed_initial_plants(world, entities, 20)
 
     for _ in range(3):
-        _place_random(world, entities, Herbivore, event_log)
+        _place_random(state, Herbivore)
 
-    _place_random(world, entities, Predator, event_log)
+    _place_random(state, Predator)
 
-    event_log.log("🌱 Terrarium awakened. Watch your world grow…", "bold green")
+    state.event_log.log("🌱 Terrarium awakened. Watch your world grow…", "bold green")
 
-    return GameState(world, entities, elapsed, event_log, milestones)
+    return state
 
 
 # === Game loop helpers ===
@@ -224,10 +226,8 @@ def _handle_key(
 
         if cnt < Herbivore.MAX_POP:
             _place_random(
-                state.world,
-                state.entities,
+                state,
                 Herbivore,
-                state.event_log,
                 "🐾 A new herbivore was introduced!",
                 "yellow",
             )
@@ -241,10 +241,8 @@ def _handle_key(
 
         if cnt < Predator.MAX_POP:
             _place_random(
-                state.world,
-                state.entities,
+                state,
                 Predator,
-                state.event_log,
                 "🔴 A new predator was placed!",
                 "bold red",
             )
@@ -287,7 +285,7 @@ def _check_milestones_and_warn(
 
 # === Game loop ===
 
-def run_game(state: GameState) -> GameState:
+def run_game(state: GameState) -> GameState:  # pylint: disable=too-many-locals
     """Run the main game loop until the player quits."""
 
     key_reader = KeyReader()
@@ -337,10 +335,8 @@ def run_game(state: GameState) -> GameState:
 
                         if cnt < 2:
                             _place_random(
-                                state.world,
-                                state.entities,
+                                state,
                                 Predator,
-                                state.event_log,
                                 "🔴 A second predator enters the terrarium!",
                                 "bold red",
                             )
