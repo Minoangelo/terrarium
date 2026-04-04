@@ -11,6 +11,7 @@ import termios
 import threading
 import time
 import tty
+from dataclasses import dataclass
 from pathlib import Path
 
 from rich.console import Console
@@ -31,6 +32,28 @@ from world import World
 
 SAVE_PATH = Path.home() / ".terrarium" / "save.json"
 AUTO_SAVE_INTERVAL = 30
+
+
+@dataclass
+class GameState:
+    """Mutable game state passed through orchestration code."""
+
+    world: World
+    entities: list[Entity]
+    elapsed: int
+    event_log: EventLog
+    milestones: MilestoneTracker
+
+    @classmethod
+    def from_tuple(
+        cls,
+        data: tuple[World, list[Entity], int, EventLog, MilestoneTracker],
+    ) -> "GameState":
+        """Build state from persisted tuple data."""
+
+        world, entities, elapsed, event_log, milestones = data
+
+        return cls(world, entities, elapsed, event_log, milestones)
 
 
 # === Keyboard reader ===
@@ -96,7 +119,7 @@ class KeyReader:
 
 # === World initialisation helpers ===
 
-def _place_random(  # pylint: disable=too-many-arguments,too-many-positional-arguments
+def _place_random(
     world: World,
     entities: list[Entity],
     cls: type,
@@ -150,7 +173,7 @@ def _seed_initial_plants(world: World, entities: list[Entity], n: int) -> None:
             occupied.add((x, y))
 
 
-def _new_game() -> tuple[World, list[Entity], int, EventLog, MilestoneTracker]:
+def _new_game() -> GameState:
     """Create a brand-new terrarium with default populations."""
 
     world = World()
@@ -168,16 +191,14 @@ def _new_game() -> tuple[World, list[Entity], int, EventLog, MilestoneTracker]:
 
     event_log.log("🌱 Terrarium awakened. Watch your world grow…", "bold green")
 
-    return world, entities, elapsed, event_log, milestones
+    return GameState(world, entities, elapsed, event_log, milestones)
 
 
 # === Game loop helpers ===
 
 def _handle_key(
     key: str,
-    world: World,
-    entities: list[Entity],
-    event_log: EventLog,
+    state: GameState,
 ) -> str:
     """Process one keypress. Returns 'quit', 'rain', or '' for other actions."""
 
@@ -185,110 +206,106 @@ def _handle_key(
         return "quit"
 
     if key in ("r", "R"):
-        event_log.log("🌧  Rain began to fall!", "bold blue")
+        state.event_log.log("🌧  Rain began to fall!", "bold blue")
 
         return "rain"
 
     if key in ("f", "F"):
-        cx = random.randint(0, world.width - 1)
-        cy = random.randint(0, world.height - 1)
+        cx = random.randint(0, state.world.width - 1)
+        cy = random.randint(0, state.world.height - 1)
 
-        world.fertilize_region(cx, cy)
-        event_log.log(f"🌾 Fertilizer spread near ({cx}, {cy})!", "bold yellow")
+        state.world.fertilize_region(cx, cy)
+        state.event_log.log(f"🌾 Fertilizer spread near ({cx}, {cy})!", "bold yellow")
 
         return ""
 
     if key in ("h", "H"):
-        cnt = sum(1 for e in entities if isinstance(e, Herbivore))
+        cnt = sum(1 for e in state.entities if isinstance(e, Herbivore))
 
         if cnt < Herbivore.MAX_POP:
             _place_random(
-                world,
-                entities,
+                state.world,
+                state.entities,
                 Herbivore,
-                event_log,
+                state.event_log,
                 "🐾 A new herbivore was introduced!",
                 "yellow",
             )
         else:
-            event_log.log("⚠️  Herbivore population is at maximum!", "yellow")
+            state.event_log.log("⚠️  Herbivore population is at maximum!", "yellow")
 
         return ""
 
     if key in ("p", "P"):
-        cnt = sum(1 for e in entities if isinstance(e, Predator))
+        cnt = sum(1 for e in state.entities if isinstance(e, Predator))
 
         if cnt < Predator.MAX_POP:
             _place_random(
-                world,
-                entities,
+                state.world,
+                state.entities,
                 Predator,
-                event_log,
+                state.event_log,
                 "🔴 A new predator was placed!",
                 "bold red",
             )
         else:
-            event_log.log("⚠️  Predator population is at maximum!", "red")
+            state.event_log.log("⚠️  Predator population is at maximum!", "red")
         return ""
 
     return ""
 
 
 def _check_milestones_and_warn(
-    entities: list[Entity],
-    elapsed: int,
-    event_log: EventLog,
-    milestones: MilestoneTracker,
+    state: GameState,
 ) -> None:
     """Run milestone checks and emit low-population warnings."""
 
-    trees = sum(1 for e in entities if e.entity_type == EntityType.TREE)
-    herbs = sum(1 for e in entities if isinstance(e, Herbivore))
-    preds = sum(1 for e in entities if isinstance(e, Predator))
+    trees = sum(1 for e in state.entities if e.entity_type == EntityType.TREE)
+    herbs = sum(1 for e in state.entities if isinstance(e, Herbivore))
+    preds = sum(1 for e in state.entities if isinstance(e, Predator))
     max_pred = max(
-        (e.age for e in entities if isinstance(e, Predator)),
+        (e.age for e in state.entities if isinstance(e, Predator)),
         default=0,
     )
 
-    milestones.check(
+    state.milestones.check(
         {
             "trees": trees,
             "herbivores": herbs,
             "predators": preds,
             "max_predator_age": max_pred,
-            "elapsed": elapsed,
+            "elapsed": state.elapsed,
         },
-        event_log,
+        state.event_log,
     )
 
-    if 0 < herbs <= 2 and elapsed > 30 and elapsed % 15 == 0:
-        event_log.log("⚠️  Herbivores are going extinct!", "bold yellow")
-    if preds == 0 and elapsed > 120 and elapsed % 30 == 0:
-        event_log.log("⚠️  Predators have gone extinct!", "bold red")
+    if 0 < herbs <= 2 and state.elapsed > 30 and state.elapsed % 15 == 0:
+        state.event_log.log("⚠️  Herbivores are going extinct!", "bold yellow")
+    if preds == 0 and state.elapsed > 120 and state.elapsed % 30 == 0:
+        state.event_log.log("⚠️  Predators have gone extinct!", "bold red")
 
 
 # === Game loop ===
 
-def run_game(  # pylint: disable=too-many-locals
-    world: World,
-    entities: list[Entity],
-    elapsed: int,
-    event_log: EventLog,
-    milestones: MilestoneTracker,
-) -> tuple[World, list[Entity], int, EventLog, MilestoneTracker]:
+def run_game(state: GameState) -> GameState:
     """Run the main game loop until the player quits."""
 
     key_reader = KeyReader()
     key_reader.start()
 
     rain_ticks = 0
-    second_pred_unlocked = elapsed >= 120
+    second_pred_unlocked = state.elapsed >= 120
     renderer = Renderer()
-    last_save_elapsed = elapsed
+    last_save_elapsed = state.elapsed
 
     try:
         initial_render = renderer.render(
-            world, entities, elapsed, event_log, milestones, False
+            state.world,
+            state.entities,
+            state.elapsed,
+            state.event_log,
+            state.milestones,
+            False,
         )
 
         with Live(initial_render, screen=True, refresh_per_second=4) as live:
@@ -297,10 +314,10 @@ def run_game(  # pylint: disable=too-many-locals
             while True:
                 # process keystrokes accumulated since last frame
                 for key in key_reader.drain():
-                    action = _handle_key(key, world, entities, event_log)
+                    action = _handle_key(key, state)
 
                     if action == "quit":
-                        return world, entities, elapsed, event_log, milestones
+                        return state
                     if action == "rain":
                         rain_ticks = 20
 
@@ -309,57 +326,63 @@ def run_game(  # pylint: disable=too-many-locals
 
                 if now - last_tick >= 1.0:
                     last_tick = now
-                    elapsed += 1
-                    event_log.current_tick = elapsed
+                    state.elapsed += 1
+                    state.event_log.current_tick = state.elapsed
 
-                    if not second_pred_unlocked and elapsed >= 120:
+                    if not second_pred_unlocked and state.elapsed >= 120:
                         second_pred_unlocked = True
-                        cnt = sum(1 for e in entities if isinstance(e, Predator))
+                        cnt = sum(
+                            1 for e in state.entities if isinstance(e, Predator)
+                        )
 
                         if cnt < 2:
                             _place_random(
-                                world,
-                                entities,
+                                state.world,
+                                state.entities,
                                 Predator,
-                                event_log,
+                                state.event_log,
                                 "🔴 A second predator enters the terrarium!",
                                 "bold red",
                             )
 
-                    world.tick_soil(rain_active=rain_ticks > 0)
+                    state.world.tick_soil(rain_active=rain_ticks > 0)
 
                     if rain_ticks > 0:
                         rain_ticks -= 1
 
-                    entities = process_tick(world, entities, event_log)
+                    state.entities = process_tick(
+                        state.world,
+                        state.entities,
+                        state.event_log,
+                    )
 
-                    _check_milestones_and_warn(entities, elapsed, event_log, milestones)
+                    _check_milestones_and_warn(state)
 
-                    if elapsed - last_save_elapsed >= AUTO_SAVE_INTERVAL:
+                    if state.elapsed - last_save_elapsed >= AUTO_SAVE_INTERVAL:
                         save_game(
                             SAVE_PATH,
-                            world,
-                            entities,
-                            elapsed,
-                            event_log,
-                            milestones,
+                            state.world,
+                            state.entities,
+                            state.elapsed,
+                            state.event_log,
+                            state.milestones,
                         )
-                        last_save_elapsed = elapsed
+                        last_save_elapsed = state.elapsed
 
                 live.update(
                     renderer.render(
-                        world,
-                        entities,
-                        elapsed,
-                        event_log,
-                        milestones,
+                        state.world,
+                        state.entities,
+                        state.elapsed,
+                        state.event_log,
+                        state.milestones,
                         rain_active=rain_ticks > 0,
                     )
                 )
 
                 time.sleep(0.05)
     except KeyboardInterrupt:
-        return world, entities, elapsed, event_log, milestones
+        return state
     finally:
         key_reader.stop()
 
@@ -380,7 +403,7 @@ def main() -> None:
         )
         sys.exit(1)
 
-    world, entities, elapsed, event_log, milestones = _new_game()
+    state = _new_game()
 
     if SAVE_PATH.exists():
         console.print(
@@ -399,9 +422,9 @@ def main() -> None:
             data = load_game(SAVE_PATH)
 
             if data:
-                world, entities, elapsed, event_log, milestones = data
+                state = GameState.from_tuple(data)
                 console.print(
-                    f"[green]Resumed at {elapsed}s elapsed.[/green]  Starting in 1s…"
+                    f"[green]Resumed at {state.elapsed}s elapsed.[/green]  Starting in 1s…"
                 )
 
                 time.sleep(1.0)
@@ -413,11 +436,16 @@ def main() -> None:
                 time.sleep(1.0)
 
     try:
-        world, entities, elapsed, event_log, milestones = run_game(
-            world, entities, elapsed, event_log, milestones
-        )
+        state = run_game(state)
     finally:
-        save_game(SAVE_PATH, world, entities, elapsed, event_log, milestones)
+        save_game(
+            SAVE_PATH,
+            state.world,
+            state.entities,
+            state.elapsed,
+            state.event_log,
+            state.milestones,
+        )
         console.print("\n[green]Terrarium saved. Goodbye![/green]")
 
 
