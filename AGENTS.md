@@ -1,18 +1,26 @@
 # AGENTS.md
 
-This file is guidance for coding agents working in this repository.
-It captures how to run, validate, and modify the Terrarium codebase safely.
+Guidance for coding agents working in this repository.
+Use this file to make safe, minimal, architecture-consistent changes.
 
-## Project Snapshot
-
-- Language: Python (3.11+)
-- Runtime UI: terminal app using `rich`
+## Repository Snapshot
+- Project: Terrarium (terminal ecosystem simulation)
+- Language: Python 3.11+
+- UI/runtime: terminal app with `rich`
+- Package management: `requirements.txt` (no `pyproject.toml`)
 - Entry point: `main.py`
-- Core modules: `world.py`, `entities.py`, `renderer.py`, `events.py`, `persistence.py`, `state.py`
-- Dependency management: `requirements.txt` only (no pyproject/setup.cfg at the moment)
+- Core modules: `world.py`, `entities.py`, `events.py`, `renderer.py`, `persistence.py`, `state.py`
+- Test suite: `pytest` tests under `tests/`
+
+## Editor Rule Files (Cursor / Copilot)
+Checked paths and current status:
+- `.cursorrules`: not found
+- `.cursor/rules/`: not found
+- `.github/copilot-instructions.md`: not found
+
+If any of the files above are added later, treat them as higher-priority local guidance.
 
 ## Environment Setup
-
 ```bash
 python3 -m venv .venv
 source .venv/bin/activate
@@ -21,155 +29,126 @@ pip install -r requirements.txt
 ```
 
 ## Build / Run / Lint / Test Commands
+There is no formal build step. Use compile/lint/test as validation.
 
-There is no formal build system and no committed test suite yet.
-Use the following commands when developing.
-
-### Run the app
-
+### Run app
 ```bash
 python main.py
 ```
 
-### Basic validation (syntax/import check)
-
+### Syntax/import sanity check
 ```bash
 python -m compileall .
 ```
 
-### Linting
-
-The codebase contains inline `pylint` disables, so `pylint` is the primary implied linter.
-`ruff` is also reasonable for quick static checks, but is not configured in-repo.
-
+### Lint
+Primary lint command (matches repo style and existing inline disables):
 ```bash
-# if needed
-pip install pylint ruff
+pylint main.py entities.py events.py persistence.py renderer.py state.py world.py
+```
 
-# lint all project modules
-pylint main.py entities.py events.py persistence.py renderer.py world.py
+Lint tests when needed:
+```bash
+PYTHONPATH=. pylint tests/test_entities.py
+```
 
-# optional fast lint pass
+Optional fast lint pass:
+```bash
 ruff check .
 ```
 
-### Tests
-
-Tests are present under `tests/`.
-Use `pytest` and keep extending coverage as features and fixes are added.
-
+### Tests (pytest)
+Run full suite:
 ```bash
-# if needed
-pip install pytest
-
-# run all tests
 pytest
+```
 
-# run a single test file
+Run a single test file:
+```bash
 pytest tests/test_entities.py
+```
 
-# run a single test case
-pytest tests/test_entities.py::test_predator_hunts_nearest
+Run a single test function (recommended during iteration):
+```bash
+pytest tests/test_entities.py::test_predator_moves_toward_nearest_prey
+```
 
-# run tests by expression
+Run tests by expression:
+```bash
 pytest -k "predator and not slow"
 ```
 
-## Save/Runtime Notes
-
-- Save file path: `~/.terrarium/save.json`
-- App auto-saves every 30 seconds and on quit.
-- Terminal size requirement is enforced in `main.py` (minimum 80x24).
-- Rendering is time-based; avoid adding blocking I/O in the main loop.
-
-## Repository-Specific Code Style
-
-Follow existing style in current modules rather than introducing a new framework.
-
-### Imports
-
-- Use import groups in this order:
-  1) standard library
-  2) third-party (`rich`)
-  3) local modules (`entities`, `world`, etc.)
-- Prefer explicit imports over wildcard imports.
-- Keep one import per line when practical.
-- Use `TYPE_CHECKING` blocks for type-only imports that would otherwise cause cycles.
-- Keep `from __future__ import annotations` at top where already used.
-
-### Formatting and layout
-
-- Follow PEP 8 conventions and current file style.
-- Use 4 spaces for indentation.
-- Keep functions focused; extract helpers for simulation sub-steps.
-- Preserve section markers used in files (for example `# === Tick logic ===`).
-- Prefer short, clear docstrings on classes/functions.
-- Avoid adding comments unless logic is non-obvious.
-
-### Types and data modeling
-
-- Use type hints throughout (this codebase is already strongly typed).
-- Prefer concrete types like `list[Entity]`, `dict[str, str]`, `set[tuple[int, int]]`.
-- Use `X | None` instead of `Optional[X]`.
-- Use dataclasses for simple state containers (`Tile`, `Event`, `TickState`).
-- Keep enum-driven modeling (`EntityType`) for gameplay categories.
-
-### Naming conventions
-
-- `snake_case` for functions, methods, variables, and module-level helpers.
-- `PascalCase` for classes.
-- `UPPER_SNAKE_CASE` for constants.
-- Prefix non-public helpers with `_`.
-- Prefer descriptive names tied to simulation concepts (`tick_soil`, `reproduce_cooldown`).
-
-### Error handling
-
-- Use targeted exception handling, not bare `except`.
-- For persistence/parsing, fail safely and return `None` on invalid/corrupt save data.
-- Keep gameplay loop resilient: catch expected terminal/input failures and continue gracefully.
-- Do not swallow exceptions silently unless there is a clear recovery path.
-
-### Control flow and state updates
-
-- Prefer guard clauses (`continue`/early return) to reduce nesting.
-- Keep one-tick logic deterministic and partitioned by entity type.
-- When mutating shared per-tick state, update occupancy sets consistently.
-- Preserve existing atomic save behavior (`.tmp` write then replace).
-
-### UI/rendering conventions
-
-- Renderer should remain presentation-only; avoid game-rule mutations in `renderer.py`.
-- Keep symbol/color mappings centralized in `entities.RENDER`.
-- Truncate or bound sidebar content to avoid overflow.
-- Ensure terminal compatibility for Unicode symbols already in use.
+## Runtime and Persistence Notes
+- Save path: `~/.terrarium/save.json`
+- Auto-save cadence: every 30 seconds plus on quit
+- Save writes are atomic (`.tmp` then replace)
+- Minimum terminal size enforced in `main.py`: 80x24
+- Avoid blocking I/O in the main loop
 
 ## Architecture Guardrails
+- `world.py`: grid, tiles, neighborhood math, soil simulation
+- `entities.py`: entity models and per-tick behavior rules
+- `events.py`: event buffer and milestone logic
+- `renderer.py`: presentation only (Rich layout/text)
+- `persistence.py`: JSON serialization/deserialization only
+- `state.py`: shared state dataclasses
+- `main.py`: orchestration, input, autosave, loop timing
 
-- `world.py`: terrain grid, soil rules, neighborhood math.
-- `entities.py`: entity models + simulation tick behavior.
-- `events.py`: event ring buffer + milestone tracking.
-- `renderer.py`: Rich layout and text generation only.
-- `persistence.py`: JSON serialisation/deserialisation only.
-- `state.py`: shared orchestration/render state dataclasses.
-- `main.py`: orchestration, input handling, autosave cadence, loop timing.
+Keep responsibilities separated.
+Do not move gameplay rules into `renderer.py`.
 
-Keep responsibilities separated when adding features.
+## Code Style Guidelines
+Follow existing file-local style first; keep changes narrow and consistent.
 
-## Preferred Change Workflow for Agents
+### Imports
+- Group imports as: standard library, third-party, local
+- Keep imports explicit; avoid wildcard imports
+- Keep `from __future__ import annotations` at the top where already present
+- Use `TYPE_CHECKING` for type-only imports that may introduce cycles
 
-1. Read relevant module(s) fully before editing.
-2. Make minimal, local changes consistent with current architecture.
+### Formatting and layout
+- Follow PEP 8 and existing spacing/line-break patterns
+- Use 4-space indentation
+- Prefer small focused helpers over deep nesting
+- Preserve section markers like `# === Tick logic ===`
+- Add comments only for non-obvious logic
+- Keep docstrings concise and action-oriented
+
+### Types and data modeling
+- Keep type hints on all new or modified code
+- Prefer built-in generics (`list[T]`, `dict[K, V]`, `set[T]`)
+- Use `X | None` instead of `Optional[X]`
+- Use dataclasses for simple state containers
+- Keep enum-based modeling for entity categories (`EntityType`)
+
+### Naming conventions
+- `snake_case`: functions, methods, variables, module helpers
+- `PascalCase`: classes
+- `UPPER_SNAKE_CASE`: constants
+- Prefix internal helpers with `_` when non-public
+- Use simulation-domain names (`tick_soil`, `spread_cooldown`, `occupied`)
+
+### Control flow and state updates
+- Prefer guard clauses and early returns to reduce nesting
+- Keep tick behavior deterministic and partitioned by entity type
+- When mutating occupancy/collections during ticks, keep sets/lists in sync
+- Avoid hidden cross-module side effects
+
+### Error handling
+- Catch specific exceptions; never use bare `except`
+- For load/parse paths, fail safely and return `None` on invalid data
+- Keep game loop resilient to expected terminal/input failures
+- Do not silently ignore exceptions unless recovery behavior is explicit
+
+### Testing conventions
+- Add or update tests in `tests/` for behavior changes
+- Prefer targeted test runs while iterating, then run full `pytest`
+- For bug fixes, include at least one regression assertion
+
+## Agent Workflow
+1. Read relevant modules fully before editing.
+2. Make minimal local changes that respect architecture boundaries.
 3. Run `python -m compileall .` after edits.
-4. Run lint/tests if tools are available for your environment.
-5. In your final report, include:
-   - files changed,
-   - validation commands run,
-   - any commands you could not run.
-
-## Cursor / Copilot Rules Check
-
-- `.cursorrules`: not found
-- `.cursor/rules/`: not found
-- `.github/copilot-instructions.md`: not found
-
-No additional editor-specific instruction files are currently present.
+4. Run targeted tests, then full `pytest` if feasible.
+5. Run lint commands when available.
+6. Report files changed, commands run, and any commands not run.
