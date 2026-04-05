@@ -3,6 +3,7 @@
 ![Python](https://img.shields.io/badge/python-3.11+-blue)
 ![License](https://img.shields.io/badge/license-MIT-green)
 ![Platform](https://img.shields.io/badge/platform-linux%20|%20macos%20|%20windows-lightgrey)
+[![CI](https://github.com/Minoangelo/terrarium/actions/workflows/ci.yml/badge.svg)](https://github.com/Minoangelo/terrarium/actions/workflows/ci.yml)
 
 [![Conventional Commits](https://img.shields.io/badge/Conventional%20Commits-1.0.0-%23FE5196?logo=conventionalcommits&logoColor=white)](https://conventionalcommits.org)
 
@@ -27,6 +28,15 @@ a self-sustaining world of plants, herbivores and predators. The core fantasy is
 - A terminal at least **80 × 24** characters (120 × 30+ recommended)
 
 ## Installation
+
+### Install from PyPI
+
+```bash
+pip install terrarium-game
+terrarium-game
+```
+
+### Install from source
 
 ```bash
 git clone https://github.com/minoangelo/terrarium
@@ -151,7 +161,7 @@ pytest
 pytest tests/test_entities.py
 
 # run a single test case
-pytest tests/test_entities.py::test_predator_hunts_nearest
+pytest tests/test_entities.py::test_predator_moves_toward_nearest_prey
 
 # run by expression
 pytest -k "predator and not slow"
@@ -167,7 +177,15 @@ pytest -k "predator and not slow"
   - why it changed,
   - which validation commands you ran.
 
-### 5) Scope guidance
+### 5) Releases and PyPI publishing
+
+- Versioning and release PRs are automated with
+  [Release Please](https://github.com/googleapis/release-please).
+- Conventional Commit messages are used to determine version bumps and changelog entries.
+- Publishing to PyPI runs from GitHub Actions when a GitHub Release is published.
+- Configure PyPI trusted publishing for this repository before the first release.
+
+### 6) Scope guidance
 
 - Keep architecture boundaries intact:
   - `world.py` for terrain/soil rules,

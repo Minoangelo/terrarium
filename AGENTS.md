@@ -7,7 +7,7 @@ Use this file to make safe, minimal, architecture-consistent changes.
 - Project: Terrarium (terminal ecosystem simulation)
 - Language: Python 3.11+
 - UI/runtime: terminal app with `rich`
-- Package management: `requirements.txt` (no `pyproject.toml`)
+- Package management: `requirements.txt` and `pyproject.toml`
 - Entry point: `main.py`
 - Core modules: `world.py`, `entities.py`, `events.py`, `renderer.py`, `persistence.py`, `state.py`
 - Test suite: `pytest` tests under `tests/`
@@ -77,6 +77,18 @@ Run tests by expression:
 ```bash
 pytest -k "predator and not slow"
 ```
+
+### Packaging checks
+```bash
+python -m pip install --upgrade build twine
+python -m build
+python -m twine check dist/*
+```
+
+### Release automation
+- Release PRs and versioning are handled by Release Please.
+- Conventional Commit messages determine changelog entries and semantic version bumps.
+- PyPI publishing is handled in GitHub Actions on GitHub Release publication.
 
 ## Runtime and Persistence Notes
 - Save path: `~/.terrarium/save.json`
