@@ -145,7 +145,7 @@ Follow existing style in current modules rather than introducing a new framework
 
 ## Architecture Guardrails
 
-- `world.py`: terrain grid, soil rules, neighbourhood math.
+- `world.py`: terrain grid, soil rules, neighborhood math.
 - `entities.py`: entity models + simulation tick behavior.
 - `events.py`: event ring buffer + milestone tracking.
 - `renderer.py`: Rich layout and text generation only.

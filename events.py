@@ -138,7 +138,7 @@ class MilestoneTracker:
         if herbs == 0 and elapsed > 60:
             _fire(
                 "great_dying",
-                "💀 The Great Dying — herbivores are extinct!",
+                "💀 The Great Dying—herbivores are extinct!",
                 "bold red",
             )
 

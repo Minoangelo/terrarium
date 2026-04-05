@@ -99,7 +99,7 @@ class World:
     # === Accessors ===
 
     def get(self, x: int, y: int) -> Tile | None:
-        """Return the tile at (x, y), or None if out of bounds."""
+        """Return the tile at (x, y), or `None` if out of bounds."""
 
         if 0 <= x < self.width and 0 <= y < self.height:
             return self.tiles[y][x]

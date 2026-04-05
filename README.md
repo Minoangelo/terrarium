@@ -40,7 +40,7 @@ python main.py
 | Key | Action |
 |-----|--------|
 | `r` | Drop rain: boosts all moisture for 20 seconds |
-| `f` | Fertilize a random region: boosts nutrients |
+| `f` | Fertilise a random region: boosts nutrients |
 | `h` | Introduce a new herbivore |
 | `p` | Place a new predator (if below the cap) |
 | `q` | Quit and save |
@@ -97,7 +97,7 @@ you will be asked whether to resume. Quitting with `q` always saves immediately.
 ```
 terrarium/
 ├── main.py          # Entry point, game loop, keyboard input
-├── world.py         # Grid, Tile, and soil simulation
+├── world.py         # Grid, Tile and soil simulation
 ├── entities.py      # Entity classes and per-tick simulation logic
 ├── renderer.py      # Rich layout, viewport drawing, sidebar
 ├── events.py        # Event log and milestone tracking
@@ -129,10 +129,10 @@ python main.py
 python -m compileall .
 
 # lint (primary)
-pylint main.py entities.py events.py persistence.py renderer.py world.py
+pylint main.py <file>
 
 # lint tests (with project root on PYTHONPATH)
-PYTHONPATH=. pylint tests/test_main_state_persistence.py
+PYTHONPATH=. pylint tests/<file>
 
 # optional fast lint
 ruff check .

@@ -162,7 +162,7 @@ class Plant(Entity):
 
 
 class Animal(Entity, ABC):
-    """Abstract base for mobile entities with health, hunger, and reproduction."""
+    """Abstract base for mobile entities with health, hunger and reproduction."""
 
     HUNGER_RATE = 1.0
     REPR_COOLDOWN = 60
@@ -177,7 +177,7 @@ class Animal(Entity, ABC):
         self.name: str | None = None
 
     def to_dict(self) -> dict:
-        """Serialise including health, hunger, cooldown, and optional name."""
+        """Serialise including health, hunger, cooldown and optional name."""
 
         d = super().to_dict()
         d.update(
@@ -224,7 +224,7 @@ class Predator(Animal):
 # === Deserialisation ===
 
 def entity_from_dict(d: dict) -> Entity | None:
-    """Reconstruct an Entity from a saved dict; returns None on unknown type."""
+    """Reconstruct an Entity from a saved dict; returns `None` on unknown type."""
 
     try:
         etype = EntityType(d["type"])
@@ -302,7 +302,7 @@ def process_tick(
 # === Sub-tick helpers ===
 
 def _tick_dead_organics(state: TickState, entities: list[Entity]) -> None:
-    """Decay all DeadOrganic entities, fertilising the soil beneath them."""
+    """Decay all `DeadOrganic` entities, fertilising the soil beneath them."""
 
     for e in entities:
         if not isinstance(e, DeadOrganic):
@@ -320,7 +320,7 @@ def _tick_dead_organics(state: TickState, entities: list[Entity]) -> None:
 
 
 def _tick_plants(state: TickState, entities: list[Entity]) -> None:
-    """Grow, spread, and kill plants for this tick."""
+    """Grow, spread and kill plants for this tick."""
 
     for plant in entities:
         if not isinstance(plant, Plant) or id(plant) in state.to_remove:
@@ -464,7 +464,7 @@ def _herb_try_eat(
     pos_plant: dict[tuple[int, int], Plant],
     state: TickState,
 ) -> bool:
-    """Try to eat an adjacent plant. Returns True if successful."""
+    """Try to eat an adjacent plant. Returns `True` if successful."""
 
     nbrs = state.world.neighbours(herb.x, herb.y)
     random.shuffle(nbrs)
@@ -559,7 +559,7 @@ def _find_nearest_prey(
     pos_herb: dict[tuple[int, int], Herbivore],
     to_remove: set[int],
 ) -> Herbivore | None:
-    """Return the nearest herbivore within hunt radius, or None."""
+    """Return the nearest herbivore within hunt radius or `None`."""
 
     best: Herbivore | None = None
     best_dist: float = float("inf")

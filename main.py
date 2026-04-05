@@ -205,8 +205,8 @@ def _handle_key(
         cx = random.randint(0, state.world.width - 1)
         cy = random.randint(0, state.world.height - 1)
 
-        state.world.fertilize_region(cx, cy)
-        state.event_log.log(f"🌾 Fertilizer spread near ({cx}, {cy})!", "bold yellow")
+        state.world.fertilise_region(cx, cy)
+        state.event_log.log(f"🌾 Fertiliser spread near ({cx}, {cy})!", "bold yellow")
 
         return ""
 

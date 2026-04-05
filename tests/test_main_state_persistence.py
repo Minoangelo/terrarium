@@ -171,3 +171,45 @@ def test_run_game_catches_up_multiple_ticks_when_frame_lags(monkeypatch) -> None
     returned_state = main.run_game(state)
 
     assert returned_state.elapsed == 3
+
+
+def test_run_game_autosaves_after_interval(monkeypatch) -> None:
+    """run_game() should trigger autosave once AUTO_SAVE_INTERVAL is reached."""
+
+    state = GameState(
+        world=World(width=20, height=10),
+        entities=[Plant(1, 1)],
+        elapsed=0,
+        event_log=EventLog(),
+        milestones=MilestoneTracker(),
+    )
+
+    monkeypatch.setattr(main, "KeyReader", _FakeKeyReader)
+    monkeypatch.setattr(main, "Renderer", _FakeRenderer)
+    monkeypatch.setattr(main, "Live", _FakeLive)
+    monkeypatch.setattr(main, "process_tick", lambda _w, e, _log: e)
+
+    monotonic_values = iter([0.0, 30.1])
+
+    def _fake_monotonic() -> float:
+        return next(monotonic_values, 30.1)
+
+    monkeypatch.setattr(main.time, "monotonic", _fake_monotonic)
+
+    saved_calls: list[tuple] = []
+
+    def _fake_save(*args) -> None:
+        saved_calls.append(args)
+
+    monkeypatch.setattr(main, "save_game", _fake_save)
+
+    def _raise_interrupt(_seconds: float) -> None:
+        raise KeyboardInterrupt
+
+    monkeypatch.setattr(main.time, "sleep", _raise_interrupt)
+
+    returned_state = main.run_game(state)
+
+    assert returned_state.elapsed == 30
+    assert len(saved_calls) == 1
+    assert saved_calls[0][3] == 30

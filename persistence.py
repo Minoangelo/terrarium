@@ -41,7 +41,7 @@ def save_game(  # pylint: disable=too-many-arguments,too-many-positional-argumen
 
 
 def load_game(path: Path) -> SaveData | None:
-    """Deserialise game state from *path*. Returns None on any error."""
+    """Deserialise game state from *path*. Returns `None` on any error."""
 
     try:
         raw = path.read_text(encoding="utf-8")
