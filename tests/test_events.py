@@ -33,7 +33,7 @@ def test_event_log_recent_returns_latest_entries_in_order() -> None:
 
 
 def test_event_log_to_dict_includes_only_latest_20() -> None:
-    """Serialized event payload should include only the latest 20 events."""
+    """Serialised event payload should include only the latest 20 events."""
 
     log = EventLog()
 

@@ -39,7 +39,7 @@ def test_plant_with_low_nutrients_dies_into_dead_organic() -> None:
     )
 
 
-def test_dead_organic_fertilizes_and_decays_away() -> None:
+def test_dead_organic_fertilises_and_decays_away() -> None:
     """DeadOrganic should enrich soil and disappear when its timer reaches zero."""
 
     world = _make_world()

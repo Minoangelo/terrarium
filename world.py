@@ -106,7 +106,7 @@ class World:
 
         return None
 
-    def neighbors(self, x: int, y: int, r: int = 1) -> list[tuple[int, int]]:
+    def neighbours(self, x: int, y: int, r: int = 1) -> list[tuple[int, int]]:
         """Return all in-bounds positions within Chebyshev distance *r* of (x, y)."""
 
         result = []
@@ -143,7 +143,7 @@ class World:
 
                 if rain_active:
                     regen += 0.70
-                for nx, ny in self.neighbors(x, y, r=2):
+                for nx, ny in self.neighbours(x, y, r=2):
                     if self.tiles[ny][nx].is_water:
                         regen += 0.12
                         break
@@ -154,7 +154,7 @@ class World:
                 t.nutrients = min(100.0, max(0.0, t.nutrients + 0.01))
 
 
-    def fertilize_region(self, cx: int, cy: int, radius: int = 6) -> None:
+    def fertilise_region(self, cx: int, cy: int, radius: int = 6) -> None:
         """Instantly boost nutrients within a circular region."""
 
         for y in range(max(0, cy - radius), min(self.height, cy + radius + 1)):

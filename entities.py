@@ -385,7 +385,7 @@ def _plant_try_spread(plant: Plant, state: TickState) -> None:
     if random.random() >= spread_p:
         return
 
-    nbrs = state.world.neighbors(plant.x, plant.y)
+    nbrs = state.world.neighbours(plant.x, plant.y)
     random.shuffle(nbrs)
 
     for nx, ny in nbrs:
@@ -466,7 +466,7 @@ def _herb_try_eat(
 ) -> bool:
     """Try to eat an adjacent plant. Returns True if successful."""
 
-    nbrs = state.world.neighbors(herb.x, herb.y)
+    nbrs = state.world.neighbours(herb.x, herb.y)
     random.shuffle(nbrs)
 
     for nx, ny in nbrs:
@@ -631,7 +631,7 @@ def _animal_try_reproduce(
     Returns the updated population count.
     """
 
-    for nx, ny in state.world.neighbors(animal.x, animal.y):
+    for nx, ny in state.world.neighbours(animal.x, animal.y):
         nt = state.world.get(nx, ny)
 
         if nt and not nt.is_water and (nx, ny) not in state.occupied:
@@ -654,7 +654,7 @@ def _wander(
 ) -> None:
     """Move *animal* one step to a random free adjacent non-water tile."""
 
-    dirs = world.neighbors(animal.x, animal.y)
+    dirs = world.neighbours(animal.x, animal.y)
     random.shuffle(dirs)
 
     for nx, ny in dirs:

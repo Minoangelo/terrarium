@@ -218,7 +218,7 @@ class Renderer:  # pylint: disable=too-few-public-methods
         text.append("\n")
 
         text.append("Controls\n", style="bold white")
-        text.append("  [r] rain     [f] fertilize\n", style="dim")
+        text.append("  [r] rain     [f] fertilise\n", style="dim")
         text.append("  [h] herbivore [p] predator\n", style="dim")
         text.append("  [q] quit\n", style="dim")
 
