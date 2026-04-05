@@ -11,7 +11,6 @@ import termios
 import threading
 import time
 import tty
-from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
@@ -29,32 +28,11 @@ from entities import (
 from events import EventLog, MilestoneTracker
 from persistence import load_game, save_game
 from renderer import Renderer
+from state import GameState, RenderState
 from world import World
 
 SAVE_PATH = Path.home() / ".terrarium" / "save.json"
 AUTO_SAVE_INTERVAL = 30
-
-
-@dataclass
-class GameState:
-    """Mutable game state passed through orchestration code."""
-
-    world: World
-    entities: list[Entity]
-    elapsed: int
-    event_log: EventLog
-    milestones: MilestoneTracker
-
-    @classmethod
-    def from_tuple(
-        cls,
-        data: tuple[World, list[Entity], int, EventLog, MilestoneTracker],
-    ) -> "GameState":
-        """Build state from persisted tuple data."""
-
-        world, entities, elapsed, event_log, milestones = data
-
-        return cls(world, entities, elapsed, event_log, milestones)
 
 
 # === Keyboard reader ===
@@ -296,7 +274,7 @@ def _check_milestones_and_warn(
 
 # === Game loop ===
 
-def run_game(state: GameState) -> GameState:  # pylint: disable=too-many-locals
+def run_game(state: GameState) -> GameState:
     """Run the main game loop until the player quits."""
 
     key_reader = KeyReader()
@@ -309,12 +287,14 @@ def run_game(state: GameState) -> GameState:  # pylint: disable=too-many-locals
 
     try:
         initial_render = renderer.render(
-            state.world,
-            state.entities,
-            state.elapsed,
-            state.event_log,
-            state.milestones,
-            False,
+            RenderState(
+                world=state.world,
+                entities=state.entities,
+                elapsed=state.elapsed,
+                event_log=state.event_log,
+                milestones=state.milestones,
+                rain_active=False,
+            )
         )
 
         with Live(initial_render, screen=True, refresh_per_second=4) as live:
@@ -382,12 +362,14 @@ def run_game(state: GameState) -> GameState:  # pylint: disable=too-many-locals
 
                 live.update(
                     renderer.render(
-                        state.world,
-                        state.entities,
-                        state.elapsed,
-                        state.event_log,
-                        state.milestones,
-                        rain_active=rain_ticks > 0,
+                        RenderState(
+                            world=state.world,
+                            entities=state.entities,
+                            elapsed=state.elapsed,
+                            event_log=state.event_log,
+                            milestones=state.milestones,
+                            rain_active=rain_ticks > 0,
+                        )
                     )
                 )
 

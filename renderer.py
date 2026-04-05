@@ -1,4 +1,4 @@
-"""renderer.py—Rich layout, viewport drawing, and sidebar."""
+"""renderer.py—Rich layout, viewport drawing and sidebar."""
 
 from __future__ import annotations
 
@@ -10,6 +10,7 @@ from rich.text import Text
 
 from entities import RENDER, Animal, EntityType, Herbivore, Predator
 from events import MILESTONE_NAMES
+from state import RenderState
 
 if TYPE_CHECKING:
     from entities import Entity
@@ -21,18 +22,12 @@ class Renderer:  # pylint: disable=too-few-public-methods
     """Builds the full Rich Layout for one frame of the game."""
 
     # public entry point
-    def render(  # pylint: disable=too-many-arguments,too-many-positional-arguments
-        self,
-        world: World,
-        entities: list[Entity],
-        elapsed: int,
-        event_log: EventLog,
-        milestones: MilestoneTracker,
-        rain_active: bool,
-    ) -> Layout:
+    def render(self, state: RenderState) -> Layout:
         """Build and return the full-screen Rich Layout for this frame."""
 
-        pos_map: dict[tuple[int, int], Entity] = {(e.x, e.y): e for e in entities}
+        pos_map: dict[tuple[int, int], Entity] = {
+            (e.x, e.y): e for e in state.entities
+        }
 
         layout = Layout()
         layout.split_row(
@@ -41,7 +36,7 @@ class Renderer:  # pylint: disable=too-few-public-methods
         )
         layout["viewport"].update(
             Panel(
-                self._render_grid(world, pos_map, rain_active),
+                self._render_grid(state.world, pos_map, state.rain_active),
                 title="[bold green] Terrarium [/bold green]",
                 border_style="green",
                 padding=(0, 0),
@@ -50,7 +45,11 @@ class Renderer:  # pylint: disable=too-few-public-methods
         layout["sidebar"].update(
             Panel(
                 self._render_sidebar(
-                    entities, elapsed, event_log, milestones, rain_active
+                    state.entities,
+                    state.elapsed,
+                    state.event_log,
+                    state.milestones,
+                    state.rain_active,
                 ),
                 title="[bold cyan] Status [/bold cyan]",
                 border_style="cyan",

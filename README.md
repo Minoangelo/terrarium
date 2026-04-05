@@ -102,6 +102,7 @@ terrarium/
 ├── renderer.py      # Rich layout, viewport drawing, sidebar
 ├── events.py        # Event log and milestone tracking
 ├── persistence.py   # JSON save/load
+├── state.py         # Shared runtime/render state dataclasses
 └── requirements.txt
 ```
 

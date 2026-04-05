@@ -8,7 +8,7 @@ It captures how to run, validate, and modify the Terrarium codebase safely.
 - Language: Python (3.11+)
 - Runtime UI: terminal app using `rich`
 - Entry point: `main.py`
-- Core modules: `world.py`, `entities.py`, `renderer.py`, `events.py`, `persistence.py`
+- Core modules: `world.py`, `entities.py`, `renderer.py`, `events.py`, `persistence.py`, `state.py`
 - Dependency management: `requirements.txt` only (no pyproject/setup.cfg at the moment)
 
 ## Environment Setup
@@ -150,6 +150,7 @@ Follow existing style in current modules rather than introducing a new framework
 - `events.py`: event ring buffer + milestone tracking.
 - `renderer.py`: Rich layout and text generation only.
 - `persistence.py`: JSON serialization/deserialization only.
+- `state.py`: shared orchestration/render state dataclasses.
 - `main.py`: orchestration, input handling, autosave cadence, loop timing.
 
 Keep responsibilities separated when adding features.
