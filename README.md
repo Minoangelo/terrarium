@@ -9,15 +9,11 @@
 A living ASCII ecosystem that runs in your terminal. Watch plants spread,
 herbivores graze and predators hunt—all while you leave your terminal open.
 
-```
-┌─────────────────────────────────────────────────────── Terrarium ────┬─── Status ───┐
-│ ··,·,·~~~~~·↑·↑··,·····,···,·o····↑····················,··,·,······ │ ⏱  04:22     │
-│ ·,·♣·~~~~~·,·↑↑·,·····,·,·,····@·↑·····,·,·,···,···,·,·,·,·,····· │              │
-│ ···,·~·~~~~··,↑·,·······,·····,·↑·,·,·,·,·,·····o··,·,·,·,·,···,· │ Population   │
-│ ···,·········,·,·,·,·,·,···,·,·,·,·····,·,·,·,·,·,·,·,·,·,·,·,··· │ , Seedlings 8│
-│ ·o·♣·,·,·♣·↑·,·♣·,·,·,·,·,·,·,·,·,·,·o·····,·,·,·♣·,·,·,·,·,·,· │ ♣ Bushes    4│
-└──────────────────────────────────────────────────────────────────────┴──────────────┘
-```
+<p align="center">
+    <a href="https://www.compounder.eu" target="_blank">
+        <img src="art/screenshot.png" width="100%" height="auto"/>
+    </a>
+</p>
 
 ## Overview
 
