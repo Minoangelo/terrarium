@@ -10,9 +10,7 @@ A living ASCII ecosystem that runs in your terminal. Watch plants spread,
 herbivores graze and predators hunt—all while you leave your terminal open.
 
 <p align="center">
-    <a href="https://www.compounder.eu" target="_blank">
-        <img src="art/screenshot.png" width="100%" height="auto"/>
-    </a>
+  <img src="art/screenshot.png" width="100%" height="auto"/>
 </p>
 
 ## Overview
