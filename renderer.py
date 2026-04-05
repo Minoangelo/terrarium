@@ -44,13 +44,7 @@ class Renderer:  # pylint: disable=too-few-public-methods
         )
         layout["sidebar"].update(
             Panel(
-                self._render_sidebar(
-                    state.entities,
-                    state.elapsed,
-                    state.event_log,
-                    state.milestones,
-                    state.rain_active,
-                ),
+                self._render_sidebar(state),
                 title="[bold cyan] Status [/bold cyan]",
                 border_style="cyan",
                 padding=(0, 1),
@@ -101,20 +95,13 @@ class Renderer:  # pylint: disable=too-few-public-methods
         return text
 
     # sidebar
-    def _render_sidebar(  # pylint: disable=too-many-arguments,too-many-positional-arguments
-        self,
-        entities: list[Entity],
-        elapsed: int,
-        event_log: EventLog,
-        milestones: MilestoneTracker,
-        rain_active: bool,
-    ) -> Text:
+    def _render_sidebar(self, state: RenderState) -> Text:
         text = Text()
-        text.append_text(self._render_time_section(elapsed, rain_active))
-        text.append_text(self._render_population_section(entities))
-        text.append_text(self._render_notable_section(entities))
-        text.append_text(self._render_events_section(event_log))
-        text.append_text(self._render_milestones_section(milestones))
+        text.append_text(self._render_time_section(state.elapsed, state.rain_active))
+        text.append_text(self._render_population_section(state.entities))
+        text.append_text(self._render_notable_section(state.entities))
+        text.append_text(self._render_events_section(state.event_log))
+        text.append_text(self._render_milestones_section(state.milestones))
         text.append_text(self._render_legend_controls_section())
 
         return text
