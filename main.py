@@ -13,6 +13,7 @@ import time
 import tty
 from dataclasses import dataclass
 from pathlib import Path
+from typing import Any
 
 from rich.console import Console
 from rich.live import Live
@@ -63,7 +64,9 @@ class KeyReader:
 
     def __init__(self) -> None:
         self._q: queue.Queue = queue.Queue()
-        self._old: object = None
+        self._old: Any = None
+        self._stop_event = threading.Event()
+        self._thread: threading.Thread | None = None
 
     def start(self) -> None:
         """Put stdin into cbreak mode and start the reader thread."""
@@ -71,14 +74,22 @@ class KeyReader:
         fd = sys.stdin.fileno()
         self._old = termios.tcgetattr(fd)
         tty.setcbreak(fd)
+        self._stop_event.clear()
 
-        t = threading.Thread(target=self._loop, daemon=True)
+        self._thread = threading.Thread(target=self._loop, daemon=True)
 
-        t.start()
+        self._thread.start()
 
 
     def stop(self) -> None:
         """Restore the original terminal settings."""
+
+        self._stop_event.set()
+
+        if self._thread is not None and self._thread.is_alive():
+            self._thread.join(timeout=0.2)
+
+        self._thread = None
 
         if self._old is not None:
             try:
@@ -90,7 +101,7 @@ class KeyReader:
     def _loop(self) -> None:
         """Read characters from stdin and enqueue them."""
 
-        while True:
+        while not self._stop_event.is_set():
             try:
                 r, _, _ = select.select([sys.stdin], [], [], 0.1)
 
@@ -99,7 +110,7 @@ class KeyReader:
 
                     if ch:
                         self._q.put(ch)
-            except OSError:
+            except (OSError, ValueError):
                 break
 
 
