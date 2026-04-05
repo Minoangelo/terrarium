@@ -1,0 +1,50 @@
+{
+  "packages": {
+    ".": {
+      "release-type": "python",
+      "changelog-path": "CHANGELOG.md",
+      "changelog-sections": [
+        {
+          "type": "feat",
+          "section": "Added",
+          "hidden": false
+        },
+        {
+          "type": "fix",
+          "section": "Fixed",
+          "hidden": false
+        },
+        {
+          "type": "perf",
+          "section": "Changed",
+          "hidden": false
+        },
+        {
+          "type": "refactor",
+          "section": "Changed",
+          "hidden": false
+        },
+        {
+          "type": "revert",
+          "section": "Fixed",
+          "hidden": false
+        },
+        {
+          "type": "chore",
+          "section": "Miscellaneous",
+          "hidden": true
+        },
+        {
+          "type": "docs",
+          "section": "Added",
+          "hidden": false
+        }
+      ]
+    }
+  },
+  "plugins": [
+    {
+      "type": "sentence-case"
+    }
+  ]
+}
