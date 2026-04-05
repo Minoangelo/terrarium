@@ -1,0 +1,48 @@
+[build-system]
+requires = ["setuptools>=69", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "terrarium-game"
+version = "1.0.0"
+description = "A living ASCII ecosystem simulation for your terminal"
+readme = "README.md"
+requires-python = ">=3.11"
+license = "MIT"
+authors = [
+  { name = "Carmine (Mino) Siena" }
+]
+dependencies = [
+  "rich>=13.0.0",
+]
+classifiers = [
+  "Development Status :: 4 - Beta",
+  "Environment :: Console",
+  "Intended Audience :: End Users/Desktop",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+  "Topic :: Games/Entertainment :: Simulation",
+]
+
+[project.urls]
+Homepage = "https://github.com/minoangelo/terrarium"
+Repository = "https://github.com/minoangelo/terrarium"
+
+[project.scripts]
+terrarium-game = "main:main"
+
+[tool.setuptools]
+py-modules = [
+  "main",
+  "world",
+  "entities",
+  "events",
+  "renderer",
+  "persistence",
+  "state",
+]
+
+[tool.pytest.ini_options]
+pythonpath = ["."]
