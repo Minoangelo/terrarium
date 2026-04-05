@@ -29,7 +29,6 @@ class _FakeThread:  # pylint: disable=too-few-public-methods
 
         self.started = True
 
-
     def is_alive(self) -> bool:
         """Expose fake liveness state."""
 

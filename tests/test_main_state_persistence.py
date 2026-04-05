@@ -4,10 +4,10 @@ from __future__ import annotations
 
 import os
 
+import main
 from entities import Entity, Plant
 from events import EventLog, MilestoneTracker
 from world import World
-import main
 
 
 def _make_state(
