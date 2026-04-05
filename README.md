@@ -11,7 +11,7 @@ A living ASCII ecosystem that runs in your terminal. Watch plants spread,
 herbivores graze and predators hunt—all while you leave your terminal open.
 
 <p align="center">
-  <img src="art/screenshot.png" width="100%" height="auto"/>
+  <img src="https://raw.githubusercontent.com/Minoangelo/terrarium/refs/heads/main/art/screenshot.webp" width="100%" height="auto"/>
 </p>
 
 ## Overview
