@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "terrarium-game"
-version = "1.0.0"
+version = "1.1.0"
 description = "A living ASCII ecosystem simulation for your terminal"
 readme = "README.md"
 requires-python = ">=3.11"
