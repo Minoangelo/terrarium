@@ -194,7 +194,10 @@ class Renderer:  # pylint: disable=too-few-public-methods
         if milestones.achieved:
             text.append("Milestones\n", style="bold white")
 
-            for key in milestones.achieved:
+            ordered_keys = [k for k in MILESTONE_NAMES if k in milestones.achieved]
+            extra_keys = sorted(k for k in milestones.achieved if k not in MILESTONE_NAMES)
+
+            for key in ordered_keys + extra_keys:
                 name = MILESTONE_NAMES.get(key, key)
                 text.append(f"  ✓ {name}\n", style="gold1")
 
