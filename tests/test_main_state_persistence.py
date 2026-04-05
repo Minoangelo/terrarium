@@ -4,22 +4,23 @@ from __future__ import annotations
 
 import os
 
+import main
 from entities import Entity, Plant
 from events import EventLog, MilestoneTracker
+from state import GameState
 from world import World
-import main
 
 
 def _make_state(
     elapsed: int,
     plant_positions: list[tuple[int, int]],
-) -> main.GameState:
+) -> GameState:
     """Build a minimal, deterministic game-state tuple for tests."""
 
     world = World(width=20, height=10)
     entities: list[Entity] = [Plant(x, y) for x, y in plant_positions]
 
-    return main.GameState(world, entities, elapsed, EventLog(), MilestoneTracker())
+    return GameState(world, entities, elapsed, EventLog(), MilestoneTracker())
 
 
 def test_main_saves_state_returned_by_run_game(monkeypatch, tmp_path) -> None:
@@ -109,7 +110,7 @@ class _FakeLive:
 def test_run_game_returns_latest_state_on_keyboard_interrupt(monkeypatch) -> None:
     """run_game() should return the current state when interrupted."""
 
-    state = main.GameState(
+    state = GameState(
         world=World(width=20, height=10),
         entities=[Plant(1, 1)],
         elapsed=0,
@@ -142,7 +143,7 @@ def test_run_game_returns_latest_state_on_keyboard_interrupt(monkeypatch) -> Non
 def test_run_game_catches_up_multiple_ticks_when_frame_lags(monkeypatch) -> None:
     """run_game() should process multiple ticks when accumulated time exceeds 1s."""
 
-    state = main.GameState(
+    state = GameState(
         world=World(width=20, height=10),
         entities=[Plant(1, 1)],
         elapsed=0,

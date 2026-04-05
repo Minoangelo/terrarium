@@ -1,4 +1,4 @@
-"""renderer.py—Rich layout, viewport drawing, and sidebar."""
+"""renderer.py—Rich layout, viewport drawing and sidebar."""
 
 from __future__ import annotations
 
@@ -10,6 +10,7 @@ from rich.text import Text
 
 from entities import RENDER, Animal, EntityType, Herbivore, Predator
 from events import MILESTONE_NAMES
+from state import RenderState
 
 if TYPE_CHECKING:
     from entities import Entity
@@ -21,18 +22,12 @@ class Renderer:  # pylint: disable=too-few-public-methods
     """Builds the full Rich Layout for one frame of the game."""
 
     # public entry point
-    def render(  # pylint: disable=too-many-arguments,too-many-positional-arguments
-        self,
-        world: World,
-        entities: list[Entity],
-        elapsed: int,
-        event_log: EventLog,
-        milestones: MilestoneTracker,
-        rain_active: bool,
-    ) -> Layout:
+    def render(self, state: RenderState) -> Layout:
         """Build and return the full-screen Rich Layout for this frame."""
 
-        pos_map: dict[tuple[int, int], Entity] = {(e.x, e.y): e for e in entities}
+        pos_map: dict[tuple[int, int], Entity] = {
+            (e.x, e.y): e for e in state.entities
+        }
 
         layout = Layout()
         layout.split_row(
@@ -41,7 +36,7 @@ class Renderer:  # pylint: disable=too-few-public-methods
         )
         layout["viewport"].update(
             Panel(
-                self._render_grid(world, pos_map, rain_active),
+                self._render_grid(state.world, pos_map, state.rain_active),
                 title="[bold green] Terrarium [/bold green]",
                 border_style="green",
                 padding=(0, 0),
@@ -49,9 +44,7 @@ class Renderer:  # pylint: disable=too-few-public-methods
         )
         layout["sidebar"].update(
             Panel(
-                self._render_sidebar(
-                    entities, elapsed, event_log, milestones, rain_active
-                ),
+                self._render_sidebar(state),
                 title="[bold cyan] Status [/bold cyan]",
                 border_style="cyan",
                 padding=(0, 1),
@@ -102,17 +95,22 @@ class Renderer:  # pylint: disable=too-few-public-methods
         return text
 
     # sidebar
-    def _render_sidebar(  # pylint: disable=too-many-arguments,too-many-positional-arguments,too-many-locals,too-many-statements
-        self,
-        entities: list[Entity],
-        elapsed: int,
-        event_log: EventLog,
-        milestones: MilestoneTracker,
-        rain_active: bool,
-    ) -> Text:
+    def _render_sidebar(self, state: RenderState) -> Text:
+        text = Text()
+        text.append_text(self._render_time_section(state.elapsed, state.rain_active))
+        text.append_text(self._render_population_section(state.entities))
+        text.append_text(self._render_notable_section(state.entities))
+        text.append_text(self._render_events_section(state.event_log))
+        text.append_text(self._render_milestones_section(state.milestones))
+        text.append_text(self._render_legend_controls_section())
+
+        return text
+
+    def _render_time_section(self, elapsed: int, rain_active: bool) -> Text:
+        """Render the elapsed-time and rain-status section."""
+
         text = Text()
 
-        # time
         h, rem = divmod(elapsed, 3600)
         m, s = divmod(rem, 60)
         ts = f"{h:02d}:{m:02d}:{s:02d}" if h else f"{m:02d}:{s:02d}"
@@ -123,7 +121,13 @@ class Renderer:  # pylint: disable=too-few-public-methods
 
         text.append("\n")
 
-        # population counts
+        return text
+
+    def _render_population_section(self, entities: list[Entity]) -> Text:
+        """Render population counters for plants and animals."""
+
+        text = Text()
+
         seedlings = sum(1 for e in entities if e.entity_type == EntityType.SEEDLING)
         bushes = sum(1 for e in entities if e.entity_type == EntityType.BUSH)
         trees = sum(1 for e in entities if e.entity_type == EntityType.TREE)
@@ -138,7 +142,13 @@ class Renderer:  # pylint: disable=too-few-public-methods
         text.append(f"  @ Predators  {preds:3d}\n", style="red")
         text.append("\n")
 
-        # mamed animals
+        return text
+
+    def _render_notable_section(self, entities: list[Entity]) -> Text:
+        """Render recently named animals."""
+
+        text = Text()
+
         named = [e for e in entities if isinstance(e, Animal) and e.name]
 
         if named:
@@ -151,13 +161,18 @@ class Renderer:  # pylint: disable=too-few-public-methods
 
             text.append("\n")
 
-        # event log
+        return text
+
+    def _render_events_section(self, event_log: EventLog) -> Text:
+        """Render recent event messages."""
+
+        text = Text()
+
         text.append("Recent Events\n", style="bold white")
         events = event_log.recent(8)
 
         if events:
             for ev in events:
-                # truncate long messages so they do not overflow the sidebar
                 msg = ev.message
 
                 if len(msg) > 32:
@@ -169,7 +184,13 @@ class Renderer:  # pylint: disable=too-few-public-methods
 
         text.append("\n")
 
-        # milestones
+        return text
+
+    def _render_milestones_section(self, milestones: MilestoneTracker) -> Text:
+        """Render achieved milestones."""
+
+        text = Text()
+
         if milestones.achieved:
             text.append("Milestones\n", style="bold white")
 
@@ -179,7 +200,13 @@ class Renderer:  # pylint: disable=too-few-public-methods
 
             text.append("\n")
 
-        # legend
+        return text
+
+    def _render_legend_controls_section(self) -> Text:
+        """Render the legend and controls sections."""
+
+        text = Text()
+
         text.append("Legend\n", style="bold white")
         text.append("  ,  seedling  ♣  bush\n", style="dim")
         text.append("  ↑  tree      o  herb\n", style="dim")
@@ -187,7 +214,6 @@ class Renderer:  # pylint: disable=too-few-public-methods
         text.append("  ~  water     ·  soil\n", style="dim")
         text.append("\n")
 
-        # controls
         text.append("Controls\n", style="bold white")
         text.append("  [r] rain     [f] fertilize\n", style="dim")
         text.append("  [h] herbivore [p] predator\n", style="dim")
